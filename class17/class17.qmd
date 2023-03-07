@@ -1,7 +1,7 @@
 ---
 title: "Class 17: Mini Project"
 author: "Christina Mac"
-format: html
+format: pdf
 ---
 We will start by downloading the most recently dated "Statewide COVID-19 Vaccines Administered by ZIP code" CSV file:
 ```{r}
@@ -65,7 +65,7 @@ today()
 ```
 ```{r}
 # This will give an Error!
-today() - vax$as_of_date[1]
+#today() - vax$as_of_date[1]
 ```
 
 
@@ -170,7 +170,7 @@ sd$zip_code_tabulation_area[which.max(sd$age12_plus_population)]
 ```
 
 ```{r}
-sd %>%
+x <-sd %>%
   filter(as_of_date == "2023-02-28")
 ```
 
@@ -204,9 +204,6 @@ ggplot(sd.today, aes(x=sd.today$percent_of_population_fully_vaccinated, )) +
 ```{r}
 ucsd <- filter(sd, zip_code_tabulation_area=="92037")
 ucsd[1,]$age5_plus_population
-```
-```{r}
-ucsd
 ```
 
 
