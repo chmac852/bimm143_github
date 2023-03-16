@@ -1,0 +1,187 @@
+---
+title: "class07"
+author: "Christina Mac"
+format: gfm
+---
+
+In this class, we will explore clustering and dimensionality reduction methods. 
+
+##K-means 
+Make up some input data where we know what the answer should be.
+```{r}
+#will give 10 random values around 0
+rnorm(10)
+#give the histogram for the random numbers
+hist(rnorm(100000))
+#the default mean is 0, you can change that
+#making a vector
+temp <-c(rnorm(30,-3), rnorm(30,+3))
+#reverse --> will switch the two vectors in temp
+x<-cbind(x=temp, y=rev(temp))
+x
+```
+
+Quick plot of x to see the two groups at -3,+3 and +3,-3.
+```{r}
+plot(x)
+```
+
+Use the `kmeans()` function setting k to 2 and nstart=20
+```{r}
+km <-kmeans(x, centers=2, nstart=20)
+km
+```
+
+Inspect the results
+>How many points are in each cluster?
+
+```{r}
+km$size
+```
+>What component of you result object details:
+  - cluster assignment/membership?
+  - cluster center?
+  
+```{r}
+km$cluster
+```
+```{r}
+km$centers
+```
+>Plot x colored by the kmeans cluster assignment and add cluster centers as blue points
+
+```{r}
+#this plot will color alternating points, does not really tell you much
+plot(x, col=c("red", "blue"))
+```
+```{r}
+plot(x, col=km$cluster)
+points(km$centers, col = "blue", pch=15, cex = 2)
+```
+Play with kmeans and ask fo different number of clusters
+```{r}
+km <-kmeans(x, centers=3, nstart=20)
+plot(x, col=km$cluster)
+points(km$centers, col="blue", pch=16, cex = 2 )
+```
+# Hierarchical clustering
+This is another very useful and widely employed clustering method which has the advantage over kmeans in that it can help reveal the something of th true groups in your data.
+
+The `hclust()` function wants a distance matrix as input. We an get this from the `dist()` function.
+```{r}
+d <- dist(x)
+#wants a distance matrix, any type
+hc <- hclust(d)
+hc
+```
+There is a plot method for hclust results: 
+```{r}
+plot(hc)
+```
+Branch length (height) is proportional to how "close" the two points are.
+Closer points are grouped together. 
+```{r}
+plot(hc)
+abline(h=10, col="red")
+```
+To get my cluster membership vector, I need to "cut" my tree to yield sub-trees or branches with all the members of a given cluster residing on the same cut branch.The function to do this is called `cutree()`
+```{r}
+grps <- cutree(hc, h=10)
+grps
+```
+```{r}
+plot(x, col=grps)
+```
+It is often helpful to use the `k=` argyment to cutree rather than the `h=` height of cutting with `cutree()`, This will cut the tree where it will give you your desired number of clusters. 
+```{r}
+cutree(hc, k=4)
+```
+
+# Principal Component Analysis (PCA)
+
+The base R function for PCA is called `prcomp()`
+The motivation is to reduce the features dimensionality while only losing a small amount of information. The first principal component (PC) follows a "best fit"  through the data points. Principal components are new low dimensional axis (or surfaces) closest to the observations.
+Can get rid of the old axes, and just use the PC1 and PC2 to describe the data. 
+
+# Lab 
+```{r}
+url <- "https://tinyurl.com/UK-foods"
+x <- read.csv(url)
+```
+Q1.
+```{r}
+## Complete the following code to find out how many rows and columns are in x?
+dim(x)
+```
+```{r}
+## Preview the first 6 rows
+View(x)
+```
+```{r}
+# Note how the minus indexing works
+rownames(x) <- x[,1]
+x <- x[,-1]
+head(x)
+dim(x)
+```
+
+```{r}
+x <- read.csv(url, row.names=1)
+head(x)
+dim(x)
+```
+Q2. Using the second method of counting columns is better. If you ru the first method multiple times, the number of columns becomes smaller every time.
+
+```{r}
+barplot(as.matrix(x), beside=T, col=rainbow(nrow(x)))
+```
+Switching the `beside=` argument to false would result in the bars stacked on top of each other instead of next to each other.
+
+```{r}
+barplot(as.matrix(x), beside=F, col=rainbow(nrow(x)))
+```
+```{r}
+pairs(x, col=rainbow(10), pch=16)
+```
+Q5. The axes are denoted by the countries. If there is a more diagonal line with less scatter, that means that the two countries being compared have similar food consumption patterns.
+Q6. People in N. Ireland eat much more fresh potatoes and way less alcoholic drinks compared to the other countries.
+
+```{r}
+# Use the prcomp() PCA function 
+pca <- prcomp( t(x) )
+summary(pca)
+```
+```{r}
+pca$x
+```
+
+A "PCA plot" (aka Score plot, PC1vsPC2 plot, etc.)
+```{r}
+# Plot PC1 vs PC2
+#Plot the first column of pca (PC1)vs the second column (PC2)
+plot(pca$x[,1], pca$x[,2], xlab="PC1", ylab="PC2", xlim=c(-270,500))
+text(pca$x[,1], pca$x[,2], colnames(x), col= c("orange", "red", "blue", "darkgreen",pch=15))
+```
+```{r}
+v <- round( pca$sdev^2/sum(pca$sdev^2) * 100 )
+v
+```
+```{r}
+## or the second row here...
+z <- summary(pca)
+z$importance
+```
+```{r}
+barplot(v, xlab="Principal Component", ylab="Percent Variation")
+```
+```{r}
+## Lets focus on PC1 as it accounts for > 90% of variance 
+par(mar=c(10, 3, 0.35, 0))
+barplot( pca$rotation[,1], las=2 )
+```
+```{r}
+## Lets focus on PC1 as it accounts for > 90% of variance 
+par(mar=c(10, 3, 0.35, 0))
+barplot( pca$rotation[,2], las=2 )
+```
+Q9. PC2 prominently features soft drinks and alcoholic drinks.
