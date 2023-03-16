@@ -1,6 +1,6 @@
 ---
 title: "class19"
-format: pdf
+format: gfm
 ---
 
 # Investigating pertussis cases by year 
