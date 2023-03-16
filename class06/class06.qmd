@@ -1,0 +1,176 @@
+---
+title: "class06"
+author: "Christina Mac"
+format: gfm
+---
+
+## R functions 
+
+In this lass, we will work through the process of developing our own function for calculating average grades for fictional students in a fictional class. 
+
+W will start with a simplified version of the problem. Grade some vectors of student scores. We want to drop the lowest score and get the average.
+
+```{r}
+student1 <- c(100, 100, 100, 100, 100, 100, 100, 90)
+student2 <- c(100, NA, 90, 90, 90, 90, 97, 80)
+student3 <- c(90, NA, NA, NA, NA, NA, NA, NA)
+```
+
+We can use the `mean()` function to get the average: 
+
+```{r}
+mean(student1)
+```
+We can find the smallest value with the `min()` function.
+```{r}
+min(student1)
+```
+
+There is also the `which.min()` function, Let's see if this can help:
+```{r}
+student1
+```
+```{r}
+which.min(student1)
+```
+```{r}
+student1 - student1[which.min(student1)]
+```
+```{r}
+x <- 1:5
+x
+x[4]
+x[-4]
+```
+
+```{r}
+student1_finalizedscore <- student1[-which.min(student1)]
+mean(student1_finalizedscore)
+```
+Let's put this together to drop the lowest value ad find the average. 
+```{r}
+mean(student1[-which.min(student1)])
+```
+Now what about student2?
+```{r}
+student2
+mean(student2[-which.min(student2)])
+which.min(student2)
+student2[-which.min(student2)]
+```
+```{r}
+mean(c(5,5,5,NA), na.rm=TRUE)
+```
+```{r}
+mean(student2[-which.min(student2)], na.rm = TRUE)
+```
+
+Hmmm... okay what about student 3?
+```{r}
+student3
+mean(student3, na.rm=TRUE)
+```
+
+So, this sucks! It inflates grades as it drops all the NAs before determining the mean... 
+
+I am so smart and know how to use google! 
+How does function `is.na()` work?
+
+```{r}
+student2
+is.na(student2)
+```
+I can use a logical vector to index another vector. 
+
+```{r}
+x <- 1:5
+x[x>3]
+```
+
+```{r}
+student2[is.na(student2)] <- 0
+student2
+```
+```{r}
+x <- student3
+x[is.na(x)] <- 0
+x
+mean(x[-which.min(x)])
+```
+We have our working snippet of code! Ths is now going to be the body of our function.
+all functions in R have at least 2 things: 
+  -A name (we pick)
+  -input or arguement 
+  -a body (the code that does the work)
+  
+```{r}
+grade <-function(x) {
+  #mask NA to zero
+  x[is.na(x)] <- 0
+  #drop the lowest value and get the mean
+  mean(x[-which.min(x)])
+}
+```
+```{r}
+grade(student1)
+```
+```{r}
+class <- c(student1, student2, student3)
+grade(class)
+```
+```{r}
+gradebook <- read.csv("https://tinyurl.com/gradeinput", row.names =1)
+head(gradebook)
+```
+
+I can use the super useful but a bit more complicated `apply()` function to use our existing `grade()` function on th whole class gradebook.
+
+How does this `apply()` function work?
+
+```{r}
+results <- apply(gradebook, 1, grade)
+results
+```
+```{r}
+which.max(results)
+```
+```{r}
+apply(gradebook, MARGIN = 2, sum, na.rm=TRUE)
+```
+```{r}
+which.min(apply(gradebook, MARGIN = 2, sum, na.rm=TRUE))
+```
+```{r}
+which.min(apply(gradebook, MARGIN = 2, mean, na.rm=TRUE))
+```
+If I want to use the mean approach, I will need to mask the NA (missing HWs) to zeros first: 
+
+```{r}
+mask <- gradebook
+mask[is.na(mask)] <- 0
+mask
+```
+```{r}
+which.min(apply(mask, 2,mean, na.rm=TRUE))
+```
+Here we re going to look at the correlation of each HW results (i.e. the columns in the gradebook) with the overall grade of students from the course (in the `results` object obtained from using our `grade` function).
+```{r}
+results
+```
+```{r}
+mask$hw4
+```
+ 
+I am going to use `cor()` function: 
+```{r}
+cor(results, mask$hw1)
+cor(results, mask$hw2)
+cor(results, mask$hw3)
+cor(results, mask$hw4)
+cor(results, mask$hw5)
+```
+Can you use it all in one go?
+```{r}
+apply(mask, MARGIN = 2, cor, results)
+```
+Homework 5 was the most predictive, since it had the highest correlation between score and overall student performance.
